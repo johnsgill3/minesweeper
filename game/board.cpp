@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <random>
 #include <time.h>
 #include "board.h"
 ///////////////////////////////////////////////////////////////////////////////
@@ -14,13 +15,13 @@ Square **reservoidSample(Square **stream, int n, int k)
         reservoir[i] = stream[i];
 
     // Initialize Random
-    srand(time(NULL));
+    std::random_device rd;
 
     // Iterate over remaining elements
     // Randomly replace with elements
     for(; i < n; i++)
     {
-        j = rand() % (i+1);
+        j = rd() % (i+1);
         // If the randomly  picked index is smaller than k, then replace
         // the element present at the index with new element from stream
         if (j < k)
@@ -47,9 +48,9 @@ void Board::setBomb(int x, int y)
             if(BDEBUG)
                 printf("    (%d, %d)\n", i, j);
             if(i == x && j == y)
-                board[i][j]->setBomb();
+                board[(i*numCol)+j]->setBomb();
             else
-                board[i][j]->touchingBomb();
+                board[(i*numCol)+j]->touchingBomb();
             if(BDEBUG)
                 printBoard();
         }
@@ -59,26 +60,63 @@ void Board::setBomb(int x, int y)
 void Board::initBoard()
 {
     int i, j;
-    board = new Square**[numRow];
-    allSquares = new Square*[numRow*numCol];
+    board = new Square*[numRow*numCol];
 
     for(i = 0; i < numRow; i++)
-    {
-        board[i] = new Square*[numCol];
         for(j = 0; j < numCol; j++)
-        {
-            board[i][j] = new Square(i, j);
-            allSquares[(i*numCol)+j] = board[i][j];
-        }
-    }
+            board[(i*numCol)+j] = new Square(i, j);
     placeBombs();
+}
+
+void Board::finiBoard()
+{
+    int i, j;
+    for(i = 0; i < numRow; i++)
+        for(j = 0; j < numCol; j++)
+            delete board[(i*numCol)+j];
+    delete board;
+    board = NULL;
+    delete bombSquares;
+    bombSquares = NULL;
 }
 
 void Board::placeBombs()
 {
-    bombSquares = reservoidSample(allSquares, numRow*numCol, numBomb);
+    bombSquares = reservoidSample(board, numRow*numCol, numBomb);
     for(int i = 0; i < numBomb; i++)
         setBomb(bombSquares[i]->getX(), bombSquares[i]->getY());
+}
+
+boardState_t Board::clickSquareR(int x, int y)
+{
+    if(board[(x*numCol)+y]->isVisible() ||
+       board[(x*numCol)+y]->isFlag())
+        return INPROGRESS;
+
+    board[(x*numCol)+y]->setVisible();
+    if(board[(x*numCol)+y]->isBomb())
+        return LOSS;
+
+    if(board[(x*numCol)+y]->getNumBombs() == 0)
+    {
+        int i, j;
+        for(i = x - 1; i <= x+1; i++)
+        {
+            if(i < 0 || i > numRow - 1)
+                continue;
+            for(j = y - 1; j <= y+1; j++)
+            {
+                if(j < 0 || j > numCol - 1 || board[(i*numCol)+j]->isBomb())
+                    continue;
+
+                if(board[(i*numCol)+j]->getNumBombs() == 0)
+                    clickSquareR(i, j);
+                board[(i*numCol)+j]->setVisible();
+            }
+        }
+    }
+
+    return INPROGRESS;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -91,40 +129,50 @@ Board::Board(int r, int c, int b)
     initBoard();
 }
 
-bool Board::clickSquare(int x, int y)
+Board::~Board()
 {
-    if(board[x][y]->isVisible())
-        return false;
+    finiBoard();
+}
 
-    board[x][y]->setVisible();
-    if(board[x][y]->isBomb())
-        return true;
+void Board::reset()
+{
+    finiBoard();
+    initBoard();
+}
 
-    if(board[x][y]->getNumBombs() == 0)
+boardState_t Board::clickSquare(int x, int y)
+{
+
+    boardState_t state = clickSquareR(x, y);
+    int i, j;
+
+    if(state == LOSS)
+        return state;
+
+    // check win condition
+    bool allVisible = true;
+    for(i = 0; i < numRow; i++)
     {
-        int i, j;
-        for(i = x - 1; i <= x+1; i++)
+        for(j = 0; j < numCol; j++)
         {
-            if(i < 0 || i > numRow - 1)
+            if(board[(i*numCol)+j]->isBomb())
                 continue;
-            for(j = y - 1; j <= y+1; j++)
+            if(!board[(i*numCol)+j]->isVisible())
             {
-                if(j < 0 || j > numCol - 1 || board[i][j]->isBomb())
-                    continue;
-
-                if(board[i][j]->getNumBombs() == 0)
-                    clickSquare(i, j);
-                board[i][j]->setVisible();
+                allVisible = false;
+                break;
             }
         }
     }
+    if(allVisible)
+        return WON;
 
-    return false;
+    return INPROGRESS;
 }
 
 void Board::flagSquare(int x, int y)
 {
-    board[x][y]->toggleFlag();
+    board[(x*numCol)+y]->toggleFlag();
 }
 
 void Board::printBoard(bool debug)
@@ -133,9 +181,7 @@ void Board::printBoard(bool debug)
     for(i = 0; i < numRow; i++)
     {
         for(j = 0; j < numCol; j++)
-        {
-            board[i][j]->print();
-        }
+            board[(i*numCol)+j]->print();
         printf("\n");
     }
     printf("\n");
@@ -145,17 +191,9 @@ void Board::printBoard(bool debug)
         for(i = 0; i < numRow; i++)
         {
             for(j = 0; j < numCol; j++)
-            {
-                board[i][j]->print(debug);
-            }
+                board[(i*numCol)+j]->print(debug);
             printf("\n");
         }
         printf("\n");
     }
 }
-
-/* TODO:
- * 2. Win Conditions
- * 3. Lose Conditions
- * 4. ?
- */
