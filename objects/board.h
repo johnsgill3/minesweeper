@@ -8,6 +8,7 @@ typedef enum {
 
 class Board {
     int numRow, numCol, numBomb;
+    boardState_t state;
     Square **board;
     Square **bombSquares;
     void setBomb(int, int);

@@ -66,6 +66,7 @@ void Board::initBoard()
         for(j = 0; j < numCol; j++)
             board[(i*numCol)+j] = new Square(i, j);
     placeBombs();
+    state = INPROGRESS;
 }
 
 void Board::finiBoard()
@@ -142,32 +143,39 @@ void Board::reset()
 
 boardState_t Board::clickSquare(int x, int y)
 {
+    if(state != INPROGRESS)
+        return state;
 
-    boardState_t state = clickSquareR(x, y);
+    state = clickSquareR(x, y);
     int i, j;
 
     if(state == LOSS)
-        return state;
-
-    // check win condition
-    bool allVisible = true;
-    for(i = 0; i < numRow; i++)
     {
-        for(j = 0; j < numCol; j++)
+        for(i = 0 ;i < numBomb; i++)
+            board[(i*numCol)+j]->setVisible();
+    }
+    else
+    {
+        // check win condition
+        bool allVisible = true;
+        for(i = 0; i < numRow; i++)
         {
-            if(board[(i*numCol)+j]->isBomb())
-                continue;
-            if(!board[(i*numCol)+j]->isVisible())
+            for(j = 0; j < numCol; j++)
             {
-                allVisible = false;
-                break;
+                if(board[(i*numCol)+j]->isBomb())
+                    continue;
+                if(!board[(i*numCol)+j]->isVisible())
+                {
+                    allVisible = false;
+                    break;
+                }
             }
         }
+        if(allVisible)
+            state = WON;
     }
-    if(allVisible)
-        return WON;
 
-    return INPROGRESS;
+    return state;
 }
 
 void Board::flagSquare(int x, int y)
