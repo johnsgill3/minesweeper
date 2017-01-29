@@ -61,8 +61,8 @@ int main (int argc, char **argv)
         x = y = -1;
 
         // Print the current state of board
-
         cout << *b << endl;
+        
         // Get user input
         getline(cin, line);
         ss.clear();

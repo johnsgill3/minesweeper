@@ -202,6 +202,5 @@ std::ostream& operator<<(std::ostream& os, const Board& b)
             os << *b.board[(i*b.numCol)+j];
         os << std::endl;
     }
-    os << std::endl;
     return os;
 }
