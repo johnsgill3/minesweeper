@@ -15,6 +15,7 @@ class Board {
     void initBoard();
     void finiBoard();
     void placeBombs();
+    bool validSquare(int,int);
     boardState_t clickSquareR(int x, int y);
 public:
     Board(int, int, int);

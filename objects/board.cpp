@@ -120,6 +120,16 @@ boardState_t Board::clickSquareR(int x, int y)
     return INPROGRESS;
 }
 
+bool Board::validSquare(int x, int y)
+{
+    if(x < 0 || x > numRow)
+        return false;
+    if(y < 0 || y > numCol)
+        return false;
+
+    return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Public Functions
 Board::Board(int r, int c, int b)
@@ -143,6 +153,9 @@ void Board::reset()
 
 boardState_t Board::clickSquare(int x, int y)
 {
+    if(!validSquare(x, y))
+        return INPROGRESS;
+
     if(state != INPROGRESS)
         return state;
 
@@ -180,6 +193,8 @@ boardState_t Board::clickSquare(int x, int y)
 
 void Board::flagSquare(int x, int y)
 {
+    if(!validSquare(x, y)) return;
+
     board[(x*numCol)+y]->toggleFlag();
 }
 
