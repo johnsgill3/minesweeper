@@ -56,37 +56,47 @@ int main (int argc, char **argv)
 
     do
     {
-        // Reset Input Variables
-        action = ' ';
-        x = y = -1;
+        do
+        {
+            // Reset Input Variables
+            action = ' ';
+            x = y = -1;
 
-        // Print the current state of board
+            // Print the current state of board
+            cout << *b << endl;
+
+            // Get user input
+            getline(cin, line);
+            ss.clear();
+            ss.str(line);
+            ss >> action;
+            ss >> x;
+            ss >> y;
+
+            // Perform the action
+            switch(action)
+            {
+                case 'c':
+                    gState = b->clickSquare(x, y);
+                    break;
+                case 'f':
+                    b->flagSquare(x, y);
+                    break;
+                default:
+                    cout << "Action can only be one of 'c' or 'f'" << endl;
+            }
+        } while(gState == INPROGRESS);
+
         cout << *b << endl;
-        
-        // Get user input
+        cout << (gState == WON ? "WIN" : "LOSE") << endl;
+
         getline(cin, line);
         ss.clear();
         ss.str(line);
         ss >> action;
-        ss >> x;
-        ss >> y;
-
-        // Perform the action
-        switch(action)
-        {
-            case 'c':
-                gState = b->clickSquare(x, y);
-                break;
-            case 'f':
-                b->flagSquare(x, y);
-                break;
-            default:
-                cout << "Action can only be one of 'c' or 'f'" << endl;
-        }
-    } while(gState == INPROGRESS);
-
-    cout << *b << endl;
-    cout << (gState == WON ? "WIN" : "LOSE") << endl;
+        if(action == 'y')
+            b->reset();
+    } while(action == 'y');
 
     return 0;
 }
