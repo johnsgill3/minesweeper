@@ -30,16 +30,18 @@ int Square::getNumBombs() { return numBombs; }
 int Square::getX() { return xCoord; }
 int Square::getY() { return yCoord; }
 
-void Square::print(bool debug) {
-    if(flagged && !debug)
-        printf("+");
-    else if(debug || visible)
+std::ostream& operator<<(std::ostream& os, const Square& s)
+{
+    if(s.flagged)
+        os << "+";
+    else if(s.visible)
     {
-        if(bomb)
-            printf("*");
+        if(s.bomb)
+            os << "*";
         else
-            printf("%d", numBombs);
+            os << s.numBombs;
     }
     else
-        printf(".");
+        os << ".";
+    return os;
 }

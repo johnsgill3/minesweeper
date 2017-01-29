@@ -35,8 +35,6 @@ Square **reservoidSample(Square **stream, int n, int k)
 void Board::setBomb(int x, int y)
 {
     int i, j;
-    if(BDEBUG)
-        printf("(%d, %d)\n", x, y);
     for(i = x - 1; i <= x+1; i++)
     {
         if(i < 0 || i > numRow - 1)
@@ -45,14 +43,11 @@ void Board::setBomb(int x, int y)
         {
             if(j < 0 || j > numCol - 1)
                 continue;
-            if(BDEBUG)
-                printf("    (%d, %d)\n", i, j);
+
             if(i == x && j == y)
                 board[(i*numCol)+j]->setBomb();
             else
                 board[(i*numCol)+j]->touchingBomb();
-            if(BDEBUG)
-                printBoard();
         }
     }
 }
@@ -164,8 +159,8 @@ boardState_t Board::clickSquare(int x, int y)
 
     if(state == LOSS)
     {
-        for(i = 0 ;i < numBomb; i++)
-            board[(i*numCol)+j]->setVisible();
+        for(i = 0; i < numBomb; i++)
+            bombSquares[i]->setVisible();
     }
     else
     {
@@ -198,25 +193,15 @@ void Board::flagSquare(int x, int y)
     board[(x*numCol)+y]->toggleFlag();
 }
 
-void Board::printBoard(bool debug)
+std::ostream& operator<<(std::ostream& os, const Board& b)
 {
     int i, j;
-    for(i = 0; i < numRow; i++)
+    for(i = 0; i < b.numRow; i++)
     {
-        for(j = 0; j < numCol; j++)
-            board[(i*numCol)+j]->print();
-        printf("\n");
+        for(j = 0; j < b.numCol; j++)
+            os << *b.board[(i*b.numCol)+j];
+        os << std::endl;
     }
-    printf("\n");
-
-    if(debug)
-    {
-        for(i = 0; i < numRow; i++)
-        {
-            for(j = 0; j < numCol; j++)
-                board[(i*numCol)+j]->print(debug);
-            printf("\n");
-        }
-        printf("\n");
-    }
+    os << std::endl;
+    return os;
 }

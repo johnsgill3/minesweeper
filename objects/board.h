@@ -1,5 +1,6 @@
+#include <iostream>
 #include "square.h"
-#define BDEBUG 0
+
 typedef enum {
     LOSS,
     INPROGRESS,
@@ -24,5 +25,5 @@ public:
     void flagSquare(int, int);
     void reset();
 
-    void printBoard(bool debug = BDEBUG);
+    friend std::ostream& operator<<(std::ostream&, const Board&);
 };

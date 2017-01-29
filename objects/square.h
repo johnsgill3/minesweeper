@@ -1,4 +1,4 @@
-#define SDEBUG 0
+#include <iostream>
 class Square {
     bool visible, bomb, flagged;
     int numBombs, xCoord, yCoord;
@@ -17,5 +17,5 @@ public:
     int getX();
     int getY();
 
-    void print(bool debug = SDEBUG);
+    friend std::ostream& operator<<(std::ostream&, const Square&);
 };
