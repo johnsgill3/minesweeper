@@ -102,7 +102,7 @@ int main (int argc, char **argv)
             }
         } while(gState == INPROGRESS);
 
-        cout << (gState == WON ? "WIN" : "LOSE") << endl << *b << endl;
+        cout << (gState == WON ? "WIN" : "LOSE") << endl << *b;
 
         getline(cin, line);
         ss.clear();

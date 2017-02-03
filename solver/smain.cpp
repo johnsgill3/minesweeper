@@ -59,7 +59,7 @@ int main (int argc, char **argv)
 
     b = new Board(nRow, nCol, nBomb, false);
 
-    for(int g = 0; g < nGames; g++)
+    for(int g = 1; g <= nGames; g++)
     {
         do
         {
@@ -75,16 +75,19 @@ int main (int argc, char **argv)
             ss >> action;
             if(debug)
                 cerr << "solver-" << "action = " << action << endl;
+            cin >> *b;
             if(action.compare(contStr) == 0)
             {
-                cin >> *b;
                 cout << "c " << (sNum / nRow) << " " << (sNum % nCol) << endl;
                 sNum++;
             }
         } while(action.compare(contStr) == 0);
 
-        if(g < nGames)
+        if(g < nGames) {
             cout << "y" << endl;
+            sNum = 0;
+            b->reset();
+        }
     }
 
     return 0;
