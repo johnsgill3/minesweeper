@@ -73,8 +73,11 @@ void Board::finiBoard()
             delete board[(i*numCol)+j];
     delete board;
     board = NULL;
-    delete bombSquares;
-    bombSquares = NULL;
+    if(isGame)
+    {
+        delete bombSquares;
+        bombSquares = NULL;
+    }
 }
 
 void Board::placeBombs()
