@@ -1,9 +1,9 @@
 #include <iostream>
 class Square {
-    bool visible, bomb, flagged;
+    bool visible, bomb, flagged, isGame;
     int numBombs, xCoord, yCoord;
 public:
-    Square(int, int);
+    Square(int, int, bool g = true);
     void setBomb();
     void touchingBomb();
     void setVisible();
@@ -18,4 +18,5 @@ public:
     int getY();
 
     friend std::ostream& operator<<(std::ostream&, const Square&);
+    friend std::istream& operator>>(std::istream&, Square&);
 };

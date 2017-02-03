@@ -1,12 +1,13 @@
 #include "stdio.h"
 #include "square.h"
 
-Square::Square(int x, int y)
+Square::Square(int x, int y, bool g)
 {
     bomb = flagged = visible = false;
     numBombs = 0;
     xCoord = x;
     yCoord = y;
+    isGame = g;
 }
 
 void Square::setBomb() { bomb = true; numBombs = 0; }
@@ -44,4 +45,38 @@ std::ostream& operator<<(std::ostream& os, const Square& s)
     else
         os << ".";
     return os;
+}
+
+std::istream& operator>>(std::istream& is, Square& s)
+{
+    char c;
+    is.get(c);
+    std::cerr << "Got character - '" << c << "'" << std::endl;
+    switch (c)
+    {
+        case '+':
+            s.flagged = true;
+            break;
+        case '*':
+            s.bomb = true;
+            break;
+        case '.': break; // Do nothing, unknown square
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+            s.numBombs = c - 0x30;
+            s.visible = true;
+            break;
+        default:
+            std::cerr << "Unknown Square Value - '" << c << "'" << std::endl;
+            exit(1);
+            break;
+    }
+    return is;
 }

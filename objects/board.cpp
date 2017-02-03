@@ -60,7 +60,8 @@ void Board::initBoard()
     for(i = 0; i < numRow; i++)
         for(j = 0; j < numCol; j++)
             board[(i*numCol)+j] = new Square(i, j);
-    placeBombs();
+    if(isGame)
+        placeBombs();
     state = INPROGRESS;
 }
 
@@ -127,11 +128,12 @@ bool Board::validSquare(int x, int y)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public Functions
-Board::Board(int r, int c, int b)
+Board::Board(int r, int c, int b, bool g)
 {
     numRow = r;
     numCol = c;
     numBomb = b;
+    isGame = g;
     initBoard();
 }
 
@@ -203,4 +205,17 @@ std::ostream& operator<<(std::ostream& os, const Board& b)
         os << std::endl;
     }
     return os;
+}
+
+std::istream& operator>>(std::istream& is, Board& b)
+{
+    char c;
+    int i, j;
+    for(i = 0; i < b.numRow; i++)
+    {
+        for(j = 0; j < b.numCol; j++)
+            is >> *b.board[(i*b.numCol)+j];
+        is.get(c); // Consume the new line
+    }
+    return is;
 }
