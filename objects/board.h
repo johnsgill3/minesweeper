@@ -1,3 +1,5 @@
+#ifndef _BOARD_H_
+#define _BOARD_H_
 #include <iostream>
 #include "square.h"
 
@@ -29,3 +31,4 @@ public:
     friend std::ostream& operator<<(std::ostream&, const Board&);
     friend std::istream& operator>>(std::istream&, Board&);
 };
+#endif

@@ -1,3 +1,5 @@
+#ifndef _SQUARE_H_
+#define _SQUARE_H_
 #include <iostream>
 class Square {
     bool visible, bomb, flagged, isGame;
@@ -20,3 +22,4 @@ public:
     friend std::ostream& operator<<(std::ostream&, const Square&);
     friend std::istream& operator>>(std::istream&, Square&);
 };
+#endif
