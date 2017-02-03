@@ -11,14 +11,17 @@ using namespace std;
 
 void usage(string error)
 {
-    cout << error << endl;
+    cerr << "game-" << error << endl;
     // TODO: Full "Help"
     exit(1);
 }
 
 int main (int argc, char **argv)
 {
-    bool debug;
+    cout.setf(ios::unitbuf);
+    cerr.setf(ios::unitbuf);
+
+    bool debug, interactive;
     int nRow, nCol, nBomb, x, y;
     char c, action;
     nRow = nCol = nBomb = -1;
@@ -28,7 +31,7 @@ int main (int argc, char **argv)
     string line;
 
     opterr = 0;
-    while ((c = getopt (argc, argv, "r:c:b:d")) != -1)
+    while ((c = getopt (argc, argv, "r:c:b:di")) != -1)
     {
         switch (c)
         {
@@ -44,6 +47,9 @@ int main (int argc, char **argv)
         case 'd':
             debug = true;
             break;
+        case 'i':
+            interactive = true;
+            break;
         default:
             usage("Unknown Arguement");
         }
@@ -51,7 +57,8 @@ int main (int argc, char **argv)
     if(nRow == -1 || nCol == -1 || nBomb == -1)
         usage("Missing Arguemnt");
 
-    cout << "nRow(" << nRow << ") nCol(" << nCol << ") nBomb(" << nBomb << ")\n";
+    if(debug)
+        cerr << "game-" << "nRow(" << nRow << ") nCol(" << nCol << ") nBomb(" << nBomb << ")\n";
     b = new Board(nRow, nCol, nBomb);
 
     do
@@ -63,15 +70,23 @@ int main (int argc, char **argv)
             x = y = -1;
 
             // Print the current state of board
-            cout << *b << endl;
+            if(interactive)
+                cout << "CONTINUE" << endl << *b;
+            else
+                cout << *b;
 
             // Get user input
             getline(cin, line);
+            if(debug)
+                cerr << "game-" << "line = " << line << endl;
             ss.clear();
             ss.str(line);
             ss >> action;
             ss >> x;
             ss >> y;
+
+            if(debug)
+                cerr << "game-" << "Action = " << action << " x = " << x << " y = " << y << endl;
 
             // Perform the action
             switch(action)
@@ -87,8 +102,7 @@ int main (int argc, char **argv)
             }
         } while(gState == INPROGRESS);
 
-        cout << *b << endl;
-        cout << (gState == WON ? "WIN" : "LOSE") << endl;
+        cout << (gState == WON ? "WIN" : "LOSE") << endl << *b << endl;
 
         getline(cin, line);
         ss.clear();

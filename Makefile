@@ -5,15 +5,15 @@ LIBOBJS = $(patsubst $(LIBDIR)/%.cpp,$(BLDDIR)/%.o,$(LIBSRCS))
 
 # Game Vars
 GMDIR = game
-GMSRCS = $(GMDIR)/main.cpp
+GMSRCS = $(GMDIR)/mmain.cpp
 GMOBJS = $(patsubst $(GMDIR)/%.cpp,$(BLDDIR)/%.o,$(GMSRCS))
 GMTGT = $(BLDDIR)/minesweeper
 
 # AI Vars
 AIDIR = solver
-AISRCS =
-AIOBJS =
-AITGT =
+AISRCS = $(AIDIR)/smain.cpp
+AIOBJS = $(patsubst $(AIDIR)/%.cpp,$(BLDDIR)/%.o,$(AISRCS))
+AITGT = $(BLDDIR)/solver
 
 DEPDIR = .d
 BLDDIR = build
@@ -25,9 +25,9 @@ POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 
-all: $(OUTDIRS) $(GMTGT)
+all: $(OUTDIRS) $(GMTGT) $(AITGT)
 clean:
-	rm -rf $(LIBOBJS) $(OUTDIRS) $(GMOBJS) $(GMTGT)
+	rm -rf $(LIBOBJS) $(OUTDIRS) $(GMOBJS) $(GMTGT) $(AIOBJS) $(AITGT)
 
 $(OUTDIRS):
 	mkdir -p $(OUTDIRS)
