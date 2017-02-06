@@ -1,6 +1,7 @@
 #ifndef _BOARD_H_
 #define _BOARD_H_
 #include <iostream>
+#include "utils.h"
 #include "square.h"
 
 typedef enum {

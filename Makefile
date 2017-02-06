@@ -1,6 +1,6 @@
 # Object Vars
 LIBDIR = objects
-LIBSRCS = $(LIBDIR)/board.cpp $(LIBDIR)/square.cpp $(LIBDIR)/solver.cpp
+LIBSRCS = $(LIBDIR)/board.cpp $(LIBDIR)/square.cpp $(LIBDIR)/solver.cpp $(LIBDIR)/utils.cpp
 LIBOBJS = $(patsubst $(LIBDIR)/%.cpp,$(BLDDIR)/%.o,$(LIBSRCS))
 
 # Game Vars
@@ -19,7 +19,7 @@ DEPDIR = .d
 BLDDIR = build
 OUTDIRS = $(DEPDIR) $(BLDDIR)
 
-CPPFLAGS+=-g
+CPPFLAGS = -g
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
@@ -33,10 +33,10 @@ $(OUTDIRS):
 	mkdir -p $(OUTDIRS)
 
 $(GMTGT): $(GMOBJS) $(LIBOBJS)
-	$(CXX) -o $@  -I$(LIBDIR) $^
+	$(CXX) $(CPPFLAGS) -o $@  -I$(LIBDIR) $^
 
 $(AITGT): $(AIOBJS) $(LIBOBJS)
-	$(CXX) -o $@  -I$(LIBDIR) $^
+	$(CXX) $(CPPFLAGS) -o $@  -I$(LIBDIR) $^
 
 $(LIBOBJS): $(BLDDIR)/%.o : $(LIBDIR)/%.cpp $(DEPDIR)/%.d
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<

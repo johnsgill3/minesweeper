@@ -2,6 +2,7 @@
 #define _SOLVER_H_
 #include <iostream>
 #include <string>
+#include "utils.h"
 #include "board.h"
 
 class Solver {

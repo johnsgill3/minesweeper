@@ -1,6 +1,8 @@
 #ifndef _SQUARE_H_
 #define _SQUARE_H_
 #include <iostream>
+#include "utils.h"
+
 class Square {
     bool visible, bomb, flagged, isGame;
     int numBombs, xCoord, yCoord;
