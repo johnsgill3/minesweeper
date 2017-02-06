@@ -65,6 +65,7 @@ void Board::initBoard()
     if(isGame)
         placeBombs();
     state = INPROGRESS;
+    numVisible = 0;
 }
 
 void Board::finiBoard()
@@ -98,6 +99,7 @@ boardState_t Board::clickSquareR(int x, int y)
     board[(x*numCol)+y]->setVisible();
     if(board[(x*numCol)+y]->isBomb())
         return LOSS;
+    numVisible++;
 
     if(board[(x*numCol)+y]->getNumBombs() == 0)
     {
@@ -113,7 +115,11 @@ boardState_t Board::clickSquareR(int x, int y)
 
                 if(board[(i*numCol)+j]->getNumBombs() == 0)
                     clickSquareR(i, j);
-                board[(i*numCol)+j]->setVisible();
+                if(!board[(i*numCol)+j]->isVisible())
+                {
+                    board[(i*numCol)+j]->setVisible();
+                    numVisible++;
+                }
             }
         }
     }
@@ -162,33 +168,14 @@ boardState_t Board::clickSquare(int x, int y)
         return state;
 
     state = clickSquareR(x, y);
-    int i, j;
 
     if(state == LOSS)
     {
-        for(i = 0; i < numBomb; i++)
+        for(int i = 0; i < numBomb; i++)
             bombSquares[i]->setVisible();
     }
-    else
-    {
-        // check win condition
-        bool allVisible = true;
-        for(i = 0; i < numRow; i++)
-        {
-            for(j = 0; j < numCol; j++)
-            {
-                if(board[(i*numCol)+j]->isBomb())
-                    continue;
-                if(!board[(i*numCol)+j]->isVisible())
-                {
-                    allVisible = false;
-                    break;
-                }
-            }
-        }
-        if(allVisible)
-            state = WON;
-    }
+    else if((numVisible+numBomb) == (numRow*numCol))
+        state = WON;
 
     return state;
 }
@@ -224,7 +211,11 @@ istream& operator>>(istream& is, Board& b)
     for(i = 0; i < b.numRow; i++)
     {
         for(j = 0; j < b.numCol; j++)
+        {
             is >> *b.board[(i*b.numCol)+j];
+            if(b.board[(i*b.numCol)+j]->isVisible())
+                b.numVisible++;
+        }
         is.get(c); // Consume the new line
     }
     return is;

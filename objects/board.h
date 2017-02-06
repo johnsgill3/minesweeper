@@ -11,7 +11,7 @@ typedef enum {
 
 class Board {
     bool isGame;
-    int numRow, numCol, numBomb;
+    int numRow, numCol, numBomb, numVisible;
     boardState_t state;
     Square **board;
     Square **bombSquares;
