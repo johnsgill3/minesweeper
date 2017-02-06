@@ -3,19 +3,21 @@
 #include <random>
 #include <time.h>
 #include "board.h"
+using namespace std;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
 Square **reservoidSample(Square **stream, int n, int k)
 {
     int i, j;
     // Create the reservoir and
-    // poopulate with first k elements from stream
+    // populate with first k elements from stream
     Square **reservoir = new Square*[k];
     for(i = 0; i < k; i++)
         reservoir[i] = stream[i];
 
     // Initialize Random
-    std::random_device rd;
+    random_device rd;
 
     // Iterate over remaining elements
     // Randomly replace with elements
@@ -198,19 +200,24 @@ void Board::flagSquare(int x, int y)
     board[(x*numCol)+y]->toggleFlag();
 }
 
-std::ostream& operator<<(std::ostream& os, const Board& b)
+int Board::getNumRow() { return numRow; }
+int Board::getNumCol() { return numCol; }
+int Board::getNumBomb() { return numBomb; }
+int Board::getNumVisible() { return numVisible; }
+
+ostream& operator<<(ostream& os, const Board& b)
 {
     int i, j;
     for(i = 0; i < b.numRow; i++)
     {
         for(j = 0; j < b.numCol; j++)
             os << *b.board[(i*b.numCol)+j];
-        os << std::endl;
+        os << endl;
     }
     return os;
 }
 
-std::istream& operator>>(std::istream& is, Board& b)
+istream& operator>>(istream& is, Board& b)
 {
     char c;
     int i, j;

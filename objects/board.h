@@ -28,6 +28,11 @@ public:
     void flagSquare(int, int);
     void reset();
 
+    int getNumRow();
+    int getNumCol();
+    int getNumBomb();
+    int getNumVisible();
+
     friend std::ostream& operator<<(std::ostream&, const Board&);
     friend std::istream& operator>>(std::istream&, Board&);
 };

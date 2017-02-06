@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "square.h"
+using namespace std;
 
 Square::Square(int x, int y, bool g)
 {
@@ -31,7 +32,7 @@ int Square::getNumBombs() { return numBombs; }
 int Square::getX() { return xCoord; }
 int Square::getY() { return yCoord; }
 
-std::ostream& operator<<(std::ostream& os, const Square& s)
+ostream& operator<<(ostream& os, const Square& s)
 {
     if(s.flagged)
         os << "+";
@@ -47,11 +48,11 @@ std::ostream& operator<<(std::ostream& os, const Square& s)
     return os;
 }
 
-std::istream& operator>>(std::istream& is, Square& s)
+istream& operator>>(istream& is, Square& s)
 {
     char c;
     is.get(c);
-    std::cerr << "Got character - '" << c << "'" << std::endl;
+    cerr << "Got character - '" << c << "'" << endl;
     switch (c)
     {
         case '+':
@@ -74,7 +75,7 @@ std::istream& operator>>(std::istream& is, Square& s)
             s.visible = true;
             break;
         default:
-            std::cerr << "Unknown Square Value - '" << c << "'" << std::endl;
+            cerr << "Unknown Square Value - '" << c << "'" << endl;
             exit(1);
             break;
     }
