@@ -10,6 +10,7 @@ typedef enum {
 } boardState_t;
 
 class Board {
+    friend class Solver;
     bool isGame;
     int numRow, numCol, numBomb, numVisible;
     boardState_t state;

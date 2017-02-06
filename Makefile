@@ -1,6 +1,6 @@
 # Object Vars
 LIBDIR = objects
-LIBSRCS = $(LIBDIR)/board.cpp $(LIBDIR)/square.cpp
+LIBSRCS = $(LIBDIR)/board.cpp $(LIBDIR)/square.cpp $(LIBDIR)/solver.cpp
 LIBOBJS = $(patsubst $(LIBDIR)/%.cpp,$(BLDDIR)/%.o,$(LIBSRCS))
 
 # Game Vars
@@ -55,3 +55,4 @@ $(DEPDIR)/%.d: ;
 
 -include $(patsubst %,$(DEPDIR)/%.d,$(basename $(LIBSRCS)))
 -include $(patsubst %,$(DEPDIR)/%.d,$(basename $(GMSRCS)))
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(AISRCS)))

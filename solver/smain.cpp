@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include "board.h"
+#include "solver.h"
 
 using namespace std;
 
@@ -22,11 +23,10 @@ int main (int argc, char **argv)
     cerr.setf(ios::unitbuf);
 
     bool debug;
-    int nRow, nCol, nBomb, nGames, sNum = 0;
+    int nRow, nCol, nBomb, nGames;
     char c;
     nRow = nCol = nBomb = nGames = -1;
-    Board *b;
-    boardState_t gState = INPROGRESS;
+    Solver *s;
     stringstream ss;
     string action, line, contStr = "CONTINUE";
 
@@ -57,7 +57,7 @@ int main (int argc, char **argv)
     if(nRow == -1 || nCol == -1 || nBomb == -1 || nGames == -1)
         usage("Missing Arguemnt");
 
-    b = new Board(nRow, nCol, nBomb, false);
+    s = new Solver(nRow, nCol, nBomb);
 
     for(int g = 1; g <= nGames; g++)
     {
@@ -75,18 +75,14 @@ int main (int argc, char **argv)
             ss >> action;
             if(debug)
                 cerr << "solver-" << "action = " << action << endl;
-            cin >> *b;
+            cin >> *s;
             if(action.compare(contStr) == 0)
-            {
-                cout << "c " << (sNum / nRow) << " " << (sNum % nCol) << endl;
-                sNum++;
-            }
+                cout << s->makeGuess() << endl;
         } while(action.compare(contStr) == 0);
 
         if(g < nGames) {
             cout << "y" << endl;
-            sNum = 0;
-            b->reset();
+            s->reset();
         }
     }
 
