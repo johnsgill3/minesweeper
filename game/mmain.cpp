@@ -10,6 +10,7 @@ int main (int argc, char **argv)
 {
     cout.setf(ios::unitbuf);
     cerr.setf(ios::unitbuf);
+    signal(SIGSEGV, sig_handler);
 
     int x, y;
     char action;
@@ -29,6 +30,10 @@ int main (int argc, char **argv)
              << "nCol(" << args["nCol"] << ") "
              << "nBomb(" << args["nBomb"] << ")\n";
     b = new Board(args["nRow"], args["nCol"], args["nBomb"]);
+
+    //args["hardcode"] = 1;
+    //ss.clear(); ss.str("232\n***\n232");
+    // ss >> *b;
 
     do
     {
@@ -72,6 +77,8 @@ int main (int argc, char **argv)
         } while(gState == INPROGRESS);
 
         cout << (gState == WON ? "WIN" : "LOSE") << endl << *b;
+        if(args["debug"])
+            cerr << (gState == WON ? "WIN" : "LOSE") << endl;
 
         getline(cin, line);
         ss.clear();

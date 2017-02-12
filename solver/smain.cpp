@@ -15,6 +15,7 @@ int main (int argc, char **argv)
 {
     cout.setf(ios::unitbuf);
     cerr.setf(ios::unitbuf);
+    signal(SIGSEGV, sig_handler);
 
     Solver *s;
     stringstream ss;
@@ -26,6 +27,12 @@ int main (int argc, char **argv)
        args["nBomb"] == -1 ||
        args["nGames"] == -1)
         usage("Missing Arguemnt");
+
+    if(args["debug"])
+        cerr << "solver-" << "nRow(" << args["nRow"] << ") "
+             << "nCol(" << args["nCol"] << ") "
+             << "nBomb(" << args["nBomb"] << ") "
+             << "nGame(" << args["nGame"] << ")\n";
 
     s = new Solver(args["nRow"], args["nCol"], args["nBomb"]);
 

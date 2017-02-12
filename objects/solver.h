@@ -5,9 +5,19 @@
 #include "utils.h"
 #include "board.h"
 
+typedef struct {
+    Square *s;
+    bool calculated;
+    float prob;
+    int numBlank;
+    int numUncalculated;
+} squareOdds;
+
 class Solver {
     Board *board;
-    float *odds;
+    squareOdds *odds;
+    void countBlanks(squareOdds *o);
+    float sumCalculated(squareOdds *o);
     void updateOdds();
 public:
     Solver(int, int, int);

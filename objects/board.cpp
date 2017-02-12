@@ -199,6 +199,7 @@ ostream& operator<<(ostream& os, const Board& b)
     {
         for(j = 0; j < b.numCol; j++)
             os << *b.board[(i*b.numCol)+j];
+        if(args["debug"]) cerr << endl;
         os << endl;
     }
     return os;

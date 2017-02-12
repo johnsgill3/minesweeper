@@ -34,6 +34,14 @@ int Square::getY() { return yCoord; }
 
 ostream& operator<<(ostream& os, const Square& s)
 {
+    if(args["debug"])
+    {
+        if(s.bomb)
+            cerr << "*";
+        else
+            cerr << s.numBombs;
+    }
+
     if(s.flagged)
         os << "+";
     else if(s.visible)
@@ -45,6 +53,7 @@ ostream& operator<<(ostream& os, const Square& s)
     }
     else
         os << ".";
+
     return os;
 }
 
@@ -52,7 +61,8 @@ istream& operator>>(istream& is, Square& s)
 {
     char c;
     is.get(c);
-    cerr << "Got character - '" << c << "'" << endl;
+    if(args["debug"]) cerr << "square - character = '" << c << "'" << endl;
+    s.bomb = s.flagged = s.visible = false;
     switch (c)
     {
         case '+':
@@ -72,7 +82,7 @@ istream& operator>>(istream& is, Square& s)
         case '7':
         case '8':
             s.numBombs = c - 0x30;
-            s.visible = true;
+            s.visible = !args["hardcode"];
             break;
         default:
             cerr << "Unknown Square Value - '" << c << "'" << endl;
