@@ -11,19 +11,16 @@ using namespace std;
 // Utility Functions
 bool oddsCompare(squareOdds *a, squareOdds *b)
 {
-    // cerr << "solver - oddsCompare a(" << a->s->getX() << ", " << a->s->getY() << ")"
-    //      << " numBombs = " << a->s->getNumBombs()
-    //      << " calculated = " << a->calculated
-    //      << " prob = " << fixed << setprecision(2) << a->prob
-    //      << " numBlank = " << a->numBlank
-    //      << " numUncalculated = " << a->numUncalculated
-    //      << " b(" << b->s->getX() << ", " << b->s->getY() << ")"
-    //      << " numBombs = " << b->s->getNumBombs()
-    //      << " calculated = " << b->calculated
-    //      << " prob = " << fixed << setprecision(2) << b->prob
-    //      << " numBlank = " << b->numBlank
-    //      << " numUncalculated = " << b->numUncalculated
-    //      << endl;
+    if(a->s->getNumBombs() == a->numFound)
+        return false;
+    else if(b->s->getNumBombs() == b->numFound)
+        return true;
+
+    if(a->s->getNumBombs() - a->numFound == a->numBlank)
+        return false;
+    else if(b->s->getNumBombs() - b->numFound == b->numBlank)
+        return true;
+
     if(a->s->getNumBombs() < b->s->getNumBombs())
         return false;
     else if(a->s->getNumBombs() > b->s->getNumBombs())
@@ -67,7 +64,11 @@ void Solver::countBlanks(squareOdds *o)
                 continue;
             if(!odds[(i*board->getNumRow())+j].s->isVisible())
             {
-                odds[(x*board->getNumRow())+y].numBlank++;
+                if(odds[(i*board->getNumRow())+j].s->isFlag())
+                    odds[(x*board->getNumRow())+y].numFound++;
+                else
+                    odds[(x*board->getNumRow())+y].numBlank++;
+
                 if(!odds[(i*board->getNumRow())+j].calculated)
                     odds[(x*board->getNumRow())+y].numUncalculated++;
             }
@@ -111,7 +112,15 @@ void Solver::updateOdds()
             odds[(i*board->getNumRow())+j].prob = 0.0;
             odds[(i*board->getNumRow())+j].calculated = false;
             odds[(i*board->getNumRow())+j].numBlank = 0;
+            odds[(i*board->getNumRow())+j].numFound = 0;
             odds[(i*board->getNumRow())+j].numUncalculated = 0;
+
+            if(odds[(i*board->getNumRow())+j].s->isFlag())
+            {
+                odds[(i*board->getNumRow())+j].calculated = true;
+                odds[(i*board->getNumRow())+j].prob = 1.0;
+                remainingProb -= 1.0;
+            }
         }
     }
 
@@ -125,34 +134,14 @@ void Solver::updateOdds()
                 countBlanks(&odds[(i*board->getNumRow())+j]);
                 if(odds[(i*board->getNumRow())+j].numBlank > 0)
                     foundSquares.push_back(&odds[(i*board->getNumRow())+j]);
-                else
-                {
-                    odds[(i*board->getNumRow())+j].calculated = true;
-                    odds[(i*board->getNumRow())+j].prob = -1.0;
-                }
-            }
-            else if(odds[(i*board->getNumRow())+j].s->isFlag())
-            {
                 odds[(i*board->getNumRow())+j].calculated = true;
-                odds[(i*board->getNumRow())+j].prob = 1.0;
+                odds[(i*board->getNumRow())+j].prob = -1.0;
             }
         }
     }
 
     while(!foundSquares.empty())
     {
-        // if(args["debug"])
-        // {
-        //     for (it=foundSquares.begin(); it!=foundSquares.end(); ++it)
-        //     {
-        //         cerr << "solver - pre-sort foundSquare (" << (*it)->s->getX() << ", " << (*it)->s->getY() << ")"
-        //              << " numBombs = " << (*it)->s->getNumBombs()
-        //              << " calculated = " << (*it)->calculated
-        //              << " prob = " << fixed << setprecision(2) << (*it)->prob
-        //              << " numBlank = " << (*it)->numBlank
-        //              << " numUncalculated = " << (*it)->numUncalculated << endl;
-        //     }
-        // }
         // Sort the remaining squares to find next to process
         sort(foundSquares.begin(), foundSquares.end(), oddsCompare);
         // if(args["debug"])
@@ -164,6 +153,7 @@ void Solver::updateOdds()
         //              << " calculated = " << (*it)->calculated
         //              << " prob = " << fixed << setprecision(2) << (*it)->prob
         //              << " numBlank = " << (*it)->numBlank
+        //              << " numFound = " << (*it)->numFound
         //              << " numUncalculated = " << (*it)->numUncalculated << endl;
         //     }
         // }
@@ -171,46 +161,51 @@ void Solver::updateOdds()
         squareOdds *cur = foundSquares.back();
 
         // Calculate Odds for ajacent blanks
-        currProb = (cur->s->getNumBombs() - sumCalculated(cur)) / (cur->numUncalculated);
-        if(currProb < 0.0) currProb = 0.0;
-        //   If probability of remaining squares > remaining probability
-        if(remainingProb - (currProb * cur->numUncalculated) < 0)
-            currProb = remainingProb / cur->numUncalculated;
-
-        // Assign to uncalculated blank ajacent squares
-        x = cur->s->getX();
-        y = cur->s->getY();
-        for(i = x - 1; i <= x+1; i++)
+        if(cur->numUncalculated > 0)
         {
-            if(i < 0 || i > board->getNumRow() - 1)
-                continue;
-            for(j = y - 1; j <= y+1; j++)
+
+            currProb = (cur->s->getNumBombs() - sumCalculated(cur)) / (cur->numUncalculated);
+            if(currProb < 0.0) currProb = 0.0;
+            if(currProb >= 1.0) currProb = 1.0;
+            //   If probability of remaining squares > remaining probability
+            if(remainingProb - (currProb * cur->numUncalculated) < 0)
+                currProb = remainingProb / cur->numUncalculated;
+
+            // Assign to uncalculated blank ajacent squares
+            x = cur->s->getX();
+            y = cur->s->getY();
+            for(i = x - 1; i <= x+1; i++)
             {
-                if(j < 0 ||
-                   j > board->getNumCol() - 1 ||
-                   (i == x && j == y) ||
-                   odds[(i*board->getNumRow())+j].s->isVisible() ||
-                   odds[(i*board->getNumRow())+j].calculated)
-                {
+                if(i < 0 || i > board->getNumRow() - 1)
                     continue;
+                for(j = y - 1; j <= y+1; j++)
+                {
+                    if(j < 0 ||
+                       j > board->getNumCol() - 1 ||
+                       (i == x && j == y) ||
+                       odds[(i*board->getNumRow())+j].s->isVisible() ||
+                       odds[(i*board->getNumRow())+j].calculated)
+                    {
+                        continue;
+                    }
+                    odds[(i*board->getNumRow())+j].calculated = true;
+                    odds[(i*board->getNumRow())+j].prob = currProb;
+                    remainingProb -= currProb;
                 }
-                odds[(i*board->getNumRow())+j].calculated = true;
-                odds[(i*board->getNumRow())+j].prob = currProb;
-                remainingProb -= currProb;
             }
+            // cur->calculated = true;
+            // cur->prob = -1;
         }
-        cur->calculated = true;
-        cur->prob = -1;
         // Remove this square from list
         foundSquares.pop_back();
 
         // Update stats for remaining squres
         for (it=foundSquares.begin(); it!=foundSquares.end(); ++it)
         {
-            (*it)->numBlank = (*it)->numUncalculated = 0;
+            (*it)->numFound = (*it)->numBlank = (*it)->numUncalculated = 0;
             countBlanks(*it);
         }
-        // cerr << endl << *this;
+        cerr << endl << *this;
     }
 
     if(remainingProb > 0)
@@ -281,10 +276,10 @@ string Solver::makeGuess()
             cerr << " " << tOdds[i].prob;
         cerr << endl;
     }
-    if(tOdds[numOdds-1].prob == 1 &&
-       !tOdds[numOdds-1].s->isFlag())
+    gIdx = numOdds-1;
+    while(tOdds[gIdx].prob == 1.0 && tOdds[gIdx].s->isFlag()) gIdx -= 1;
+    if(tOdds[gIdx].prob == 1.0 && !tOdds[gIdx].s->isFlag())
     {
-        gIdx = numOdds -1;
         if(args["debug"]) cerr << "solver - guessIdx = " << gIdx << endl;
         retStr = "f " + to_string(tOdds[gIdx].s->getX()) + " " + to_string(tOdds[gIdx].s->getY());
         if(args["debug"]) cerr << "solver - guessString = \"" << retStr << "\"" << endl;

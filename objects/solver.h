@@ -10,6 +10,7 @@ typedef struct {
     bool calculated;
     float prob;
     int numBlank;
+    int numFound;
     int numUncalculated;
 } squareOdds;
 
