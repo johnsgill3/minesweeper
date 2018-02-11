@@ -1,29 +1,25 @@
+// Copyright 2018 John Gill
 #define DEFINE_VARIABLES
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string>
-#include "utils.h"
 #include <execinfo.h>
-using namespace std;
+#include <unistd.h>
+#include <cstdlib>
+#include <string>
+#include "../objects/utils.h"
 
-void usage(string error)
-{
+
+void usage(std::string error) {
+    std::cerr << error << std::endl;
     exit(1);
 }
 
-void my_getargs(int argc, char **argv)
-{
+void my_getargs(int argc, char **argv) {
     char c;
 
     args["nRow"] = args["nCol"] = args["nBomb"] = args["nGame"] = -1;
     args["debug"] = args["interactive"] = 0;
-    opterr = 0;
-    while ((c = getopt (argc, argv, "r:c:b:dg:i")) != -1)
-    {
-        switch (c)
-        {
+    // opterr = 0;
+    while ((c = getopt(argc, argv, "r:c:b:dg:i")) != -1) {
+        switch (c) {
         case 'r':
             args["nRow"] = atoi(optarg);
             break;
@@ -48,8 +44,7 @@ void my_getargs(int argc, char **argv)
     }
 }
 
-void sig_handler(int sig)
-{
+void sig_handler(int sig) {
     void *array[10];
     size_t size;
 
