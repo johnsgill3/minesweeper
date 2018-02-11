@@ -19,7 +19,7 @@ DEPDIR = .d
 BLDDIR = build
 OUTDIRS = $(DEPDIR) $(BLDDIR)
 
-CPPFLAGS = -g
+CPPFLAGS = -g --std=c++1y
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c

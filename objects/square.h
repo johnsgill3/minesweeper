@@ -1,27 +1,29 @@
-#ifndef _SQUARE_H_
-#define _SQUARE_H_
+// Copyright 2018 John Gill
+#ifndef OBJECTS_SQUARE_H_
+#define OBJECTS_SQUARE_H_
 #include <iostream>
-#include "utils.h"
 
 class Square {
-    bool visible, bomb, flagged, isGame;
-    int numBombs, xCoord, yCoord;
-public:
-    Square(int, int, bool g = true);
-    void setBomb();
-    void touchingBomb();
-    void setVisible();
-    void toggleFlag();
+ private:
+    bool visible{false}, bomb{false}, flagged{false};
+    int numBombs{-1}, xCoord{-1}, yCoord{-1};
 
-    bool isVisible();
-    bool isBomb();
-    bool isFlag();
+ public:
+    Square(int x, int y) :
+        xCoord(x), yCoord(y) { }
+    void setBomb() { bomb = true; numBombs = 0 ; }
+    void touchingBomb() { numBombs++; }
+    void setVisible() { if (!flagged) visible = true; }
+    void toggleFlag() {if(!visible) flagged = !flagged; }
 
-    int getNumBombs();
-    int getX();
-    int getY();
+    bool isVisible() const  { return visible; }
+    bool isBomb() const { return bomb; }
+    bool isFlag() const { return flagged; }
 
-    friend std::ostream& operator<<(std::ostream&, const Square&);
-    friend std::istream& operator>>(std::istream&, Square&);
+    int getNumBombs() const { return numBombs; }
+    int getX() const { return xCoord; }
+    int getY() const { return yCoord; }
+
+    friend std::istream& operator>>(std::istream& is, Square& s);
 };
-#endif
+#endif  // OBJECTS_SQUARE_H_

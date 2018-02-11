@@ -1,77 +1,43 @@
-#include "stdio.h"
-#include "square.h"
-using namespace std;
+// Copyright 2018 John Gill
+#include "./utils.h"
+#include "../objects/square.h"
 
-Square::Square(int x, int y, bool g)
-{
-    bomb = flagged = visible = false;
-    numBombs = 0;
-    xCoord = x;
-    yCoord = y;
-    isGame = g;
-}
-
-void Square::setBomb() { bomb = true; numBombs = 0; }
-void Square::touchingBomb() { numBombs++; }
-void Square::setVisible()
-{
-    if(!flagged)
-        visible = true;
-}
-void Square::toggleFlag()
-{
-    if(!visible)
-        flagged = !flagged;
-}
-
-bool Square::isVisible() { return visible; }
-bool Square::isBomb() { return bomb; }
-bool Square::isFlag() { return flagged; }
-
-int Square::getNumBombs() { return numBombs; }
-int Square::getX() { return xCoord; }
-int Square::getY() { return yCoord; }
-
-ostream& operator<<(ostream& os, const Square& s)
-{
-    if(args["debug"])
-    {
-        if(s.bomb)
-            cerr << "*";
+std::ostream& operator<<(std::ostream& os, const Square& s) {
+    if (args["debug"]) {
+        if (s.isBomb())
+            std::cerr << "*";
         else
-            cerr << s.numBombs;
+            std::cerr << s.getNumBombs();
     }
 
-    if(s.flagged)
+    if (s.isFlag()) {
         os << "+";
-    else if(s.visible)
-    {
-        if(s.bomb)
+    } else if (s.isVisible()) {
+        if (s.isBomb())
             os << "*";
         else
-            os << s.numBombs;
-    }
-    else
+            os << s.getNumBombs();
+    } else {
         os << ".";
+    }
 
     return os;
 }
 
-istream& operator>>(istream& is, Square& s)
-{
+std::istream& operator>>(std::istream& is, Square& s) {
     char c;
     is.get(c);
-    if(args["debug"]) cerr << "square - character = '" << c << "'" << endl;
+    if (args["debug"])
+        std::cerr << "square - character = '" << c << "'" << std::endl;
     s.bomb = s.flagged = s.visible = false;
-    switch (c)
-    {
+    switch (c) {
         case '+':
             s.flagged = true;
             break;
         case '*':
             s.bomb = true;
             break;
-        case '.': break; // Do nothing, unknown square
+        case '.': break;  // Do nothing, unknown square
         case '0':
         case '1':
         case '2':
@@ -85,7 +51,7 @@ istream& operator>>(istream& is, Square& s)
             s.visible = !args["hardcode"];
             break;
         default:
-            cerr << "Unknown Square Value - '" << c << "'" << endl;
+            std::cerr << "Unknown Square Value - '" << c << "'" << std::endl;
             exit(1);
             break;
     }

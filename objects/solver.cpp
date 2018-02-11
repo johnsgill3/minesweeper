@@ -1,154 +1,130 @@
-#include <iostream>
+// Copyright 2018 John Gill
 #include <iomanip>
-#include <vector>
 #include <algorithm>
 #include <random>
-#include "solver.h"
-#include <stdlib.h>
+#include "../objects/solver.h"
 
-using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
-bool oddsCompare(squareOdds *a, squareOdds *b)
-{
-    if(a->s->getNumBombs() == a->numFound)
+bool oddsCompare(const std::shared_ptr<squareOdds> & a, const std::shared_ptr<squareOdds> & b) {
+    if (a->s->getNumBombs() == a->numFound)
         return false;
-    else if(b->s->getNumBombs() == b->numFound)
+    else if (b->s->getNumBombs() == b->numFound)
         return true;
 
-    if(a->s->getNumBombs() - a->numFound == a->numBlank)
+    if ((a->s->getNumBombs() - a->numFound) == a->numBlank)
         return false;
-    else if(b->s->getNumBombs() - b->numFound == b->numBlank)
+    else if ((b->s->getNumBombs() - b->numFound) == b->numBlank)
         return true;
 
-    if(a->s->getNumBombs() < b->s->getNumBombs())
+    if (a->s->getNumBombs() < b->s->getNumBombs())
         return false;
-    else if(a->s->getNumBombs() > b->s->getNumBombs())
+    else if (a->s->getNumBombs() > b->s->getNumBombs())
         return true;
 
-    if(a->numUncalculated < b->numUncalculated)
+    if (a->numUncalculated < b->numUncalculated)
         return false;
-    else if(a->numUncalculated > b->numUncalculated)
+    else if (a->numUncalculated > b->numUncalculated)
         return true;
 
-    if(a->numBlank < b->numBlank)
+    if (a->numBlank < b->numBlank)
         return false;
-    else if(a->numBlank > b->numBlank)
+    else if (a->numBlank > b->numBlank)
         return true;
 
     return false;
 }
 
-int probCompare(const void *a, const void *b)
-{
-    float diff = ((squareOdds *)a)->prob - ((squareOdds *)b)->prob;
-    if(diff < 0.0)
+int probCompare(const std::shared_ptr<squareOdds> & a, const std::shared_ptr<squareOdds> & b) {
+    float diff = a->prob - b->prob;
+    if (diff < 0.0)
         return -1;
-    else if(diff > 0.0)
+    else if (diff > 0.0)
         return 1;
     return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Private Functions
-void Solver::countBlanks(squareOdds *o)
-{
+void Solver::countBlanks(const std::shared_ptr<squareOdds> & o) {
     int i, j, x = o->s->getX(), y = o->s->getY();
-    for(i = x - 1; i <= x+1; i++)
-    {
-        if(i < 0 || i > board->getNumRow() - 1)
+    for (i = x - 1; i <= x+1; i++) {
+        if (i < 0 || i > getNumRow() - 1)
             continue;
-        for(j = y - 1; j <= y+1; j++)
-        {
-            if(j < 0 || j > board->getNumCol() - 1 || (i == x && j == y))
+        for (j = y - 1; j <= y+1; j++) {
+            if (j < 0 || j > getNumCol() - 1 || (i == x && j == y))
                 continue;
-            if(!odds[(i*board->getNumRow())+j].s->isVisible())
-            {
-                if(odds[(i*board->getNumRow())+j].s->isFlag())
-                    odds[(x*board->getNumRow())+y].numFound++;
+            if (!odds[i][j]->s->isVisible()) {
+                if (odds[i][j]->s->isFlag())
+                    odds[x][y]->numFound++;
                 else
-                    odds[(x*board->getNumRow())+y].numBlank++;
+                    odds[x][y]->numBlank++;
 
-                if(!odds[(i*board->getNumRow())+j].calculated)
-                    odds[(x*board->getNumRow())+y].numUncalculated++;
+                if (!odds[i][j]->calculated)
+                    odds[x][y]->numUncalculated++;
             }
         }
     }
 }
 
-float Solver::sumCalculated(squareOdds *o)
-{
+float Solver::sumCalculated(const std::shared_ptr<squareOdds> & o) {
     float ret = 0.0;
     int i, j, x = o->s->getX(), y = o->s->getY();
-    for(i = x - 1; i <= x+1; i++)
-    {
-        if(i < 0 || i > board->getNumRow() - 1)
+    for (i = x - 1; i <= x+1; i++) {
+        if (i < 0 || i > getNumRow() - 1)
             continue;
-        for(j = y - 1; j <= y+1; j++)
-        {
-            if(j < 0 || j > board->getNumCol() - 1 || (i == x && j == y))
+        for (j = y - 1; j <= y+1; j++) {
+            if (j < 0 || j > getNumCol() - 1 || (i == x && j == y))
                 continue;
-            if(odds[(i*board->getNumRow())+j].calculated &&
-               !odds[(i*board->getNumRow())+j].s->isVisible())
-                ret += odds[(i*board->getNumRow())+j].prob;
+            if (odds[i][j]->calculated && !odds[i][j]->s->isVisible())
+                ret += odds[i][j]->prob;
         }
     }
     return ret;
 }
 
-void Solver::updateOdds()
-{
+void Solver::updateOdds() {
     int i, j, x, y;
-    Square *s;
-    vector<squareOdds *> foundSquares;
-    float remainingProb = board->getNumBomb(), currProb;
-    vector<squareOdds *>::iterator it;
+    std::vector<std::shared_ptr<squareOdds>> foundSquares;
+    float remainingProb = getNumBomb(), currProb = 0.0;
+    std::vector<std::shared_ptr<squareOdds>>::iterator it;
 
     // Reset all values
-    for(i = 0; i < board->getNumRow(); i++)
-    {
-        for(j = 0; j < board->getNumCol(); j++)
-        {
-            odds[(i*board->getNumRow())+j].prob = 0.0;
-            odds[(i*board->getNumRow())+j].calculated = false;
-            odds[(i*board->getNumRow())+j].numBlank = 0;
-            odds[(i*board->getNumRow())+j].numFound = 0;
-            odds[(i*board->getNumRow())+j].numUncalculated = 0;
+    for (auto & row : odds) {
+        for (auto & sq : row) {
+            sq->reset();
 
-            if(odds[(i*board->getNumRow())+j].s->isFlag())
-            {
-                odds[(i*board->getNumRow())+j].calculated = true;
-                odds[(i*board->getNumRow())+j].prob = 1.0;
+            if (sq->s->isFlag()) {
+                sq->calculated = true;
+                sq->prob = 1.0;
                 remainingProb -= 1.0;
             }
         }
     }
 
     // Calculate initial blank squares
-    for(i = 0; i < board->getNumRow(); i++)
-    {
-        for(j = 0; j < board->getNumCol(); j++)
-        {
-            if(odds[(i*board->getNumRow())+j].s->isVisible())
-            {
-                countBlanks(&odds[(i*board->getNumRow())+j]);
-                if(odds[(i*board->getNumRow())+j].numBlank > 0)
-                    foundSquares.push_back(&odds[(i*board->getNumRow())+j]);
-                odds[(i*board->getNumRow())+j].calculated = true;
-                odds[(i*board->getNumRow())+j].prob = -1.0;
+    for (auto & row : odds) {
+        for (auto & sq : row) {
+            if (sq->s->isVisible()) {
+                countBlanks(sq);
+                if (sq->numBlank > 0)
+                    foundSquares.push_back(sq);
+                sq->calculated = true;
+                sq->prob = -1.0;
             }
         }
     }
 
-    while(!foundSquares.empty())
-    {
+    while (!foundSquares.empty()) {
         // Sort the remaining squares to find next to process
         sort(foundSquares.begin(), foundSquares.end(), oddsCompare);
         // if(args["debug"])
         // {
         //     for (it=foundSquares.begin(); it!=foundSquares.end(); ++it)
         //     {
-        //         cerr << "solver - post-square foundSquare (" << (*it)->s->getX() << ", " << (*it)->s->getY() << ")"
+        //         cerr << "solver - post-square foundSquare ("
+        //              << (*it)->s->getX() << ", "
+        //              << (*it)->s->getY() << ")"
         //              << " numBombs = " << (*it)->s->getNumBombs()
         //              << " calculated = " << (*it)->calculated
         //              << " prob = " << fixed << setprecision(2) << (*it)->prob
@@ -158,75 +134,59 @@ void Solver::updateOdds()
         //     }
         // }
         // 'pop' next square off list
-        squareOdds *cur = foundSquares.back();
+        auto cur = foundSquares.back();
 
         // Calculate Odds for ajacent blanks
-        if(cur->numUncalculated > 0)
-        {
-
+        if (cur->numUncalculated > 0) {
             currProb = (cur->s->getNumBombs() - sumCalculated(cur)) / (cur->numUncalculated);
-            if(currProb < 0.0) currProb = 0.0;
-            if(currProb >= 1.0) currProb = 1.0;
-            //   If probability of remaining squares > remaining probability
-            if(remainingProb - (currProb * cur->numUncalculated) < 0)
+            if (currProb < 0.0) currProb = 0.0;
+            if (currProb >= 1.0) currProb = 1.0;
+            // If probability of remaining squares > remaining probability
+            if (remainingProb - (currProb * cur->numUncalculated) < 0)
                 currProb = remainingProb / cur->numUncalculated;
 
             // Assign to uncalculated blank ajacent squares
             x = cur->s->getX();
             y = cur->s->getY();
-            for(i = x - 1; i <= x+1; i++)
-            {
-                if(i < 0 || i > board->getNumRow() - 1)
+            for (i = x - 1; i <= x+1; i++) {
+                if (i < 0 || i > getNumRow() - 1)
                     continue;
-                for(j = y - 1; j <= y+1; j++)
-                {
-                    if(j < 0 ||
-                       j > board->getNumCol() - 1 ||
-                       (i == x && j == y) ||
-                       odds[(i*board->getNumRow())+j].s->isVisible() ||
-                       odds[(i*board->getNumRow())+j].calculated)
+                for (j = y - 1; j <= y+1; j++) {
+                    if (j < 0 || j > getNumCol() - 1 || (i == x && j == y) ||
+                        odds[i][j]->s->isVisible() || odds[i][j]->calculated)
                     {
                         continue;
                     }
-                    odds[(i*board->getNumRow())+j].calculated = true;
-                    odds[(i*board->getNumRow())+j].prob = currProb;
+                    odds[i][j]->calculated = true;
+                    odds[i][j]->prob = currProb;
                     remainingProb -= currProb;
                 }
             }
-            // cur->calculated = true;
-            // cur->prob = -1;
         }
         // Remove this square from list
         foundSquares.pop_back();
 
         // Update stats for remaining squres
-        for (it=foundSquares.begin(); it!=foundSquares.end(); ++it)
-        {
+        for (it = foundSquares.begin(); it != foundSquares.end(); ++it) {
             (*it)->numFound = (*it)->numBlank = (*it)->numUncalculated = 0;
             countBlanks(*it);
         }
-        cerr << endl << *this;
+        std::cerr << std::endl << *this;
     }
 
-    if(remainingProb > 0)
-    {
+    if (remainingProb > 0) {
         // Get list of uncalculated blank squares
-        for(i = 0; i < board->getNumRow(); i++)
-        {
-            for(j = 0; j < board->getNumCol(); j++)
-            {
-                if(!odds[(i*board->getNumRow())+j].s->isVisible() &&
-                   !odds[(i*board->getNumRow())+j].calculated)
-                {
-                    foundSquares.push_back(&odds[(i*board->getNumRow())+j]);
+        for (auto & row : odds) {
+            for (auto & sq : row) {
+                if (!sq->s->isVisible() && !sq->calculated) {
+                    foundSquares.push_back(sq);
                 }
             }
         }
 
         // Assign remaining probability to uncalculated blank squares
-        currProb = remainingProb / (float)foundSquares.size();
-        for (it=foundSquares.begin(); it!=foundSquares.end(); ++it)
-        {
+        currProb = remainingProb / static_cast<float>(foundSquares.size());
+        for (it = foundSquares.begin(); it != foundSquares.end(); ++it) {
             (*it)->calculated = true;
             (*it)->prob = currProb;
         }
@@ -235,121 +195,110 @@ void Solver::updateOdds()
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public Functions
-Solver::Solver(int r, int c, int b)
-{
-    board = new Board(r, c, b, false);
-    odds = new squareOdds[board->getNumRow()*board->getNumCol()];
+Solver::Solver(int r, int c, int b) : Board(r, c, b, false) {
     int i, j;
-    Square *s;
-    for(i = 0; i < board->getNumRow(); i++)
-        for(j = 0; j < board->getNumCol(); j++)
-        {
-            odds[(i*board->getNumRow())+j].s = board->board[(i*board->getNumRow())+j];
-            if(args["debug"])
-                cerr << "solver - odds[" << to_string((i*board->getNumRow())+j) << "]" << endl;
-        }
+    // Board::Board(r, c, b, false);
+    odds.resize(getNumRow());
+    for (auto & row : odds) {
+        row.resize(getNumCol());
+        for (auto & sq : row)
+            sq->s = board[i][j];
+        i++; j = 0;
+    }
 }
 
-Solver::~Solver()
-{
-    delete board;
-    delete odds;
-}
-
-void Solver::reset()
-{
-    board->reset();
+void Solver::reset() {
+    Board::reset();
     updateOdds();
 }
 
-string Solver::makeGuess()
-{
-    squareOdds *tOdds;
-    int numOdds = board->getNumRow()*board->getNumCol(),
-        gMin = 0, gMax = 0, gIdx = 0;
-    tOdds = new squareOdds[numOdds];
-    string retStr;
-    cerr << "solver - odds = " << endl << *this;
-    if(args["debug"])
-    {
-        cerr << "solver - odds (pre-sort):";
-        for(int i = 0; i < numOdds; i++)
-            cerr << " " << odds[i].prob;
-        cerr << endl;
+std::string Solver::makeGuess() {
+    std::vector<std::shared_ptr<squareOdds>> tOdds;
+    int gMin = 0, gMax = 0, gIdx = 0;
+    std::string retStr;
+    std::cerr << "solver - odds = " << std::endl << *this;
+    if (args["debug"]) {
+        std::cerr << "solver - odds (pre-sort):";
+        for (const auto & row : odds)
+            for (const auto & sq : row)
+                std::cerr << " " << sq->prob;
+        std::cerr << std::endl;
     }
-    memcpy(tOdds, odds, sizeof(squareOdds)*(numOdds));
-    if(args["debug"])
-    {
-        cerr << "solver - tOdds (pre-sort):";
-        for(int i = 0; i < numOdds; i++)
-            cerr << " " << tOdds[i].prob;
-        cerr << endl;
+    for (const auto & row : odds)
+        for (const auto & sq : row)
+            tOdds.push_back(sq);
+
+    if (args["debug"]) {
+        std::cerr << "solver - tOdds (pre-sort):";
+        for (const auto & sq : tOdds)
+            std::cerr << " " << sq->prob;
+        std::cerr << std::endl;
     }
-    qsort(tOdds, numOdds, sizeof(squareOdds), probCompare);
-    if(args["debug"])
-    {
-        cerr << "solver - tOdds (post-sort):";
-        for(int i = 0; i < numOdds; i++)
-            cerr << " " << tOdds[i].prob;
-        cerr << endl;
+    sort(tOdds.begin(), tOdds.end(), probCompare);
+    if (args["debug"]) {
+        std::cerr << "solver - tOdds (post-sort):";
+        for (const auto & sq : tOdds)
+            std::cerr << " " << sq->prob;
+        std::cerr << std::endl;
     }
-    gIdx = numOdds-1;
-    while(tOdds[gIdx].prob == 1.0 && tOdds[gIdx].s->isFlag()) gIdx -= 1;
-    if(tOdds[gIdx].prob == 1.0 && !tOdds[gIdx].s->isFlag())
-    {
-        if(args["debug"]) cerr << "solver - guessIdx = " << gIdx << endl;
-        retStr = "f " + to_string(tOdds[gIdx].s->getX()) + " " + to_string(tOdds[gIdx].s->getY());
-        if(args["debug"]) cerr << "solver - guessString = \"" << retStr << "\"" << endl;
-    }
-    else
-    {
-        while(tOdds[gMin].prob == -1) gMin++; // Skip displayed cells
-        while(tOdds[gMin+gMax].prob == tOdds[gMin].prob) gMax++; // Find end of same prob
+    gIdx = tOdds.size()-1;
+    while (tOdds[gIdx]->prob == 1.0 && tOdds[gIdx]->s->isFlag()) gIdx -= 1;
+    if (tOdds[gIdx]->prob == 1.0 && !tOdds[gIdx]->s->isFlag()) {
+        if (args["debug"])
+            std::cerr << "solver - guessIdx = " << gIdx << std::endl;
+        retStr = "f " + std::to_string(tOdds[gIdx]->s->getX()) + " " +
+                        std::to_string(tOdds[gIdx]->s->getY());
+        if (args["debug"])
+            std::cerr << "solver - guessString = \"" << retStr << "\"" << std::endl;
+    } else {
+        while (tOdds[gMin]->prob == -1) gMin++;  // Skip displayed cells
+        while (tOdds[gMin+gMax]->prob == tOdds[gMin]->prob) gMax++;  // Find end of same prob
         gMax += gMin;
-        if(args["debug"]) cerr << "solver - gMin = " << gMin << " gMax = " << gMax << endl;
-        if(gMax - gMin == 1) // Single point to guess
-        {
+        if (args["debug"])
+            std::cerr << "solver - gMin = " << gMin << " gMax = " << gMax << std::endl;
+        if (gMax - gMin == 1) {
+            // Single point to guess
             gIdx = gMin;
-        }
-        else // Multiple of same prob. Randomly choose one
-        {
-            random_device rd; // obtain a random number from hardware
-            mt19937 eng(rd()); // seed the generator
-            uniform_int_distribution<> distr(gMin, gMax-1); // define the range
+
+        } else {
+            // Multiple of same prob. Randomly choose one
+            std::random_device rd;  // obtain a random number from hardware
+            std::mt19937 eng(rd());  // seed the generator
+            std::uniform_int_distribution<> distr(gMin, gMax-1);  // define the range
 
             gIdx = distr(eng);
         }
-        if(args["debug"]) cerr << "solver - guessIdx = " << gIdx << endl;
-        retStr = "c " + to_string(tOdds[gIdx].s->getX()) + " " + to_string(tOdds[gIdx].s->getY());
-        if(args["debug"]) cerr << "solver - guessString = \"" << retStr << "\"" << endl;
+        if (args["debug"])
+            std::cerr << "solver - guessIdx = " << gIdx << std::endl;
+        retStr = "c " + std::to_string(tOdds[gIdx]->s->getX()) + " " +
+                        std::to_string(tOdds[gIdx]->s->getY());
+        if (args["debug"])
+            std::cerr << "solver - guessString = \"" << retStr << "\"" << std::endl;
     }
-
-    // Delete the temporary sorted copy
-    delete tOdds;
 
     return retStr;
 }
 
-ostream& operator<<(ostream &os, const Solver &s)
-{
-    int i, j;
-    for(i = 0; i < s.board->getNumRow(); i++)
-    {
-        for(j = 0; j < s.board->getNumCol(); j++)
-        {
-            if(s.odds[(i*s.board->getNumRow())+j].prob == -1.0)
+std::ostream& operator<<(std::ostream &os, const Solver &s) {
+    for (const auto & row : s.odds) {
+        for (const auto & sq : row) {
+            if (sq->prob == -1.0)
                 os << "X.XX ";
             else
-                os << fixed << setprecision(2) << s.odds[(i*s.board->getNumRow())+j].prob << " ";
+                os << std::fixed << std::setprecision(2) << sq->prob << " ";
         }
-        os << endl;
+        os << std::endl;
     }
     return os;
 }
 
-istream& operator>>(istream &is, Solver &s)
-{
-    is >> *s.board;
+std::istream& operator>>(std::istream &is, Solver &s) {
+    char c;
+    for (auto & row : s.board) {
+        for (auto & sq : row)
+            is >> *sq;
+        is.get(c);  // Consume the new line
+    }
     s.updateOdds();
     return is;
 }
