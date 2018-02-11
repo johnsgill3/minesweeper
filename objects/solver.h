@@ -24,7 +24,7 @@ class SquareOdds {
 class Solver : Board {
  private:
     vector2d<std::shared_ptr<SquareOdds>> odds;
-    void countBlanks(const std::shared_ptr<SquareOdds> &);
+    void countBlanks(std::shared_ptr<SquareOdds> &);
     float sumCalculated(const std::shared_ptr<SquareOdds> &);
     void updateOdds();
 

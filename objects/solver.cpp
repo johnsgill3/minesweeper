@@ -46,7 +46,7 @@ int probCompare(const std::shared_ptr<SquareOdds> & a, const std::shared_ptr<Squ
 
 ///////////////////////////////////////////////////////////////////////////////
 // Private Functions
-void Solver::countBlanks(const std::shared_ptr<SquareOdds> & o) {
+void Solver::countBlanks(std::shared_ptr<SquareOdds> & o) {
     int i, j, x = o->s->getX(), y = o->s->getY();
     for (i = x - 1; i <= x+1; i++) {
         if (i < 0 || i > getNumRow() - 1)
@@ -56,12 +56,12 @@ void Solver::countBlanks(const std::shared_ptr<SquareOdds> & o) {
                 continue;
             if (!odds[i][j]->s->isVisible()) {
                 if (odds[i][j]->s->isFlag())
-                    odds[x][y]->numFound++;
+                    o->numFound++;
                 else
-                    odds[x][y]->numBlank++;
+                    o->numBlank++;
 
                 if (!odds[i][j]->calculated)
-                    odds[x][y]->numUncalculated++;
+                    o->numUncalculated++;
             }
         }
     }
@@ -87,7 +87,6 @@ void Solver::updateOdds() {
     int i, j, x, y;
     std::vector<std::shared_ptr<SquareOdds>> foundSquares;
     float remainingProb = getNumBomb(), currProb = 0.0;
-    std::vector<std::shared_ptr<SquareOdds>>::iterator it;
 
     // Reset all values
     for (auto & row : odds) {
@@ -118,21 +117,19 @@ void Solver::updateOdds() {
     while (!foundSquares.empty()) {
         // Sort the remaining squares to find next to process
         sort(foundSquares.begin(), foundSquares.end(), oddsCompare);
-        // if(args["debug"])
-        // {
-        //     for (it=foundSquares.begin(); it!=foundSquares.end(); ++it)
-        //     {
-        //         cerr << "solver - post-square foundSquare ("
-        //              << (*it)->s->getX() << ", "
-        //              << (*it)->s->getY() << ")"
-        //              << " numBombs = " << (*it)->s->getNumBombs()
-        //              << " calculated = " << (*it)->calculated
-        //              << " prob = " << fixed << setprecision(2) << (*it)->prob
-        //              << " numBlank = " << (*it)->numBlank
-        //              << " numFound = " << (*it)->numFound
-        //              << " numUncalculated = " << (*it)->numUncalculated << endl;
-        //     }
-        // }
+        if (args["debug"]) {
+            for (auto & rSq : foundSquares) {
+                std::cerr << "solver - post-sort foundSquare ("
+                     << rSq->s->getX() << ", "
+                     << rSq->s->getY() << ")"
+                     << " numBombs = " << rSq->s->getNumBombs()
+                     << " calculated = " << rSq->calculated
+                     << " prob = " << std::fixed << std::setprecision(2) << rSq->prob
+                     << " numBlank = " << rSq->numBlank
+                     << " numFound = " << rSq->numFound
+                     << " numUncalculated = " << rSq->numUncalculated << std::endl;
+            }
+        }
         // 'pop' next square off list
         auto cur = foundSquares.back();
 
@@ -167,9 +164,9 @@ void Solver::updateOdds() {
         foundSquares.pop_back();
 
         // Update stats for remaining squres
-        for (it = foundSquares.begin(); it != foundSquares.end(); ++it) {
-            (*it)->numFound = (*it)->numBlank = (*it)->numUncalculated = 0;
-            countBlanks(*it);
+        for (auto & rSq : foundSquares) {
+            rSq->numFound = rSq->numBlank = rSq->numUncalculated = 0;
+            countBlanks(rSq);
         }
         std::cerr << std::endl << *this;
     }
@@ -186,9 +183,9 @@ void Solver::updateOdds() {
 
         // Assign remaining probability to uncalculated blank squares
         currProb = remainingProb / static_cast<float>(foundSquares.size());
-        for (it = foundSquares.begin(); it != foundSquares.end(); ++it) {
-            (*it)->calculated = true;
-            (*it)->prob = currProb;
+        for (auto & rSq : foundSquares) {
+            rSq->calculated = true;
+            rSq->prob = currProb;
         }
     }
 }
@@ -218,18 +215,17 @@ std::string Solver::makeGuess() {
     int gMin = 0, gMax = 0, gIdx = 0;
     std::string retStr;
     std::cerr << "solver - odds = " << std::endl << *this;
+    for (const auto & row : odds)
+        for (const auto & sq : row)
+            tOdds.emplace_back(sq);
+
     if (args["debug"]) {
         std::cerr << "solver - odds (pre-sort):";
         for (const auto & row : odds)
             for (const auto & sq : row)
                 std::cerr << " " << sq->prob;
         std::cerr << std::endl;
-    }
-    for (const auto & row : odds)
-        for (const auto & sq : row)
-            tOdds.push_back(sq);
 
-    if (args["debug"]) {
         std::cerr << "solver - tOdds (pre-sort):";
         for (const auto & sq : tOdds)
             std::cerr << " " << sq->prob;
@@ -237,6 +233,12 @@ std::string Solver::makeGuess() {
     }
     sort(tOdds.begin(), tOdds.end(), probCompare);
     if (args["debug"]) {
+        std::cerr << "solver - odds (post-sort):";
+        for (const auto & row : odds)
+            for (const auto & sq : row)
+                std::cerr << " " << sq->prob;
+        std::cerr << std::endl;
+
         std::cerr << "solver - tOdds (post-sort):";
         for (const auto & sq : tOdds)
             std::cerr << " " << sq->prob;
@@ -252,8 +254,11 @@ std::string Solver::makeGuess() {
         if (args["debug"])
             std::cerr << "solver - guessString = \"" << retStr << "\"" << std::endl;
     } else {
-        while (tOdds[gMin]->prob == -1) gMin++;  // Skip displayed cells
-        while (tOdds[gMin+gMax]->prob == tOdds[gMin]->prob) gMax++;  // Find end of same prob
+        // Skip displayed cells
+        while (gMin < tOdds.size() & tOdds[gMin]->prob == -1) gMin++;
+          // Find end of same prob
+        while ((gMin+gMax) < tOdds.size() && tOdds[gMin+gMax]->prob == tOdds[gMin]->prob)
+            gMax++;
         gMax += gMin;
         if (args["debug"])
             std::cerr << "solver - gMin = " << gMin << " gMax = " << gMax << std::endl;
