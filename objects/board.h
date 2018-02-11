@@ -20,7 +20,7 @@ std::ostream &
 operator<<(std::ostream & os, const vector2d<T> & v2d) {
     for (const auto & row : v2d) {
         for (const auto & e : row)
-            os << e << ' ';
+            os << *e;
         if (args["debug"]) std::cerr << std::endl;
         os << std::endl;
     }
@@ -31,7 +31,7 @@ class Board {
     // friend class Solver;
  private:
     bool isGame{true};
-    int numRow{-1}, numCol{-1}, numBomb{-1}, numVisible{-1};
+    int numRow{-1}, numCol{-1}, numBomb{-1}, numVisible{0};
     boardState_t state;
     std::vector<std::shared_ptr<Square>> bombSquares;
     void setBomb(int, int);
@@ -44,7 +44,7 @@ class Board {
 
  public:
     Board(int r, int c, int b, bool g = true) :
-        numRow(r), numCol(c), numBomb(b), isGame(g) { initBoard(); }
+        numRow(r), numCol(c), board(), numBomb(b), isGame(g) { initBoard(); }
     boardState_t clickSquare(int, int);
     void flagSquare(int, int);
     void reset() { initBoard(); }

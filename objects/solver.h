@@ -6,7 +6,7 @@
 #include "./utils.h"
 #include "./board.h"
 
-class squareOdds {
+class SquareOdds {
  public:
     std::shared_ptr<Square> s;
     bool calculated{false};
@@ -23,13 +23,13 @@ class squareOdds {
 
 class Solver : Board {
  private:
-    vector2d<std::shared_ptr<squareOdds>> odds;
-    void countBlanks(const std::shared_ptr<squareOdds> &o);
-    float sumCalculated(const std::shared_ptr<squareOdds> &o);
+    vector2d<std::shared_ptr<SquareOdds>> odds;
+    void countBlanks(const std::shared_ptr<SquareOdds> &);
+    float sumCalculated(const std::shared_ptr<SquareOdds> &);
     void updateOdds();
 
  public:
-    Solver(int r, int c, int b);
+    Solver(int, int, int);
 
     void reset();
     std::string makeGuess();

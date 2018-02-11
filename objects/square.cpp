@@ -2,7 +2,7 @@
 #include "./utils.h"
 #include "../objects/square.h"
 
-std::ostream& operator<<(std::ostream& os, const Square& s) {
+std::ostream& operator<<(std::ostream& os, const Square & s) {
     if (args["debug"]) {
         if (s.isBomb())
             std::cerr << "*";
@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& os, const Square& s) {
     return os;
 }
 
-std::istream& operator>>(std::istream& is, Square& s) {
+std::istream& operator>>(std::istream& is, Square & s) {
     char c;
     is.get(c);
     if (args["debug"])

@@ -51,7 +51,7 @@ void Board::initBoard() {
     int i = 0, j = 0;
     board.resize(numRow);
     for (auto & row : board) {
-        board.resize(numCol);
+        row.resize(numCol);
         for (auto & sq : row)
             sq = std::make_shared<Square>(i, j++);
         i++; j = 0;

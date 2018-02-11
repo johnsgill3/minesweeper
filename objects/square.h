@@ -6,7 +6,7 @@
 class Square {
  private:
     bool visible{false}, bomb{false}, flagged{false};
-    int numBombs{-1}, xCoord{-1}, yCoord{-1};
+    int numBombs{0}, xCoord{-1}, yCoord{-1};
 
  public:
     Square(int x, int y) :
@@ -24,6 +24,7 @@ class Square {
     int getX() const { return xCoord; }
     int getY() const { return yCoord; }
 
+    friend std::ostream& operator<<(std::ostream& os, const Square & s);
     friend std::istream& operator>>(std::istream& is, Square& s);
 };
 #endif  // OBJECTS_SQUARE_H_

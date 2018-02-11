@@ -6,7 +6,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
-bool oddsCompare(const std::shared_ptr<squareOdds> & a, const std::shared_ptr<squareOdds> & b) {
+bool oddsCompare(const std::shared_ptr<SquareOdds> & a, const std::shared_ptr<SquareOdds> & b) {
     if (a->s->getNumBombs() == a->numFound)
         return false;
     else if (b->s->getNumBombs() == b->numFound)
@@ -35,7 +35,7 @@ bool oddsCompare(const std::shared_ptr<squareOdds> & a, const std::shared_ptr<sq
     return false;
 }
 
-int probCompare(const std::shared_ptr<squareOdds> & a, const std::shared_ptr<squareOdds> & b) {
+int probCompare(const std::shared_ptr<SquareOdds> & a, const std::shared_ptr<SquareOdds> & b) {
     float diff = a->prob - b->prob;
     if (diff < 0.0)
         return -1;
@@ -46,7 +46,7 @@ int probCompare(const std::shared_ptr<squareOdds> & a, const std::shared_ptr<squ
 
 ///////////////////////////////////////////////////////////////////////////////
 // Private Functions
-void Solver::countBlanks(const std::shared_ptr<squareOdds> & o) {
+void Solver::countBlanks(const std::shared_ptr<SquareOdds> & o) {
     int i, j, x = o->s->getX(), y = o->s->getY();
     for (i = x - 1; i <= x+1; i++) {
         if (i < 0 || i > getNumRow() - 1)
@@ -67,7 +67,7 @@ void Solver::countBlanks(const std::shared_ptr<squareOdds> & o) {
     }
 }
 
-float Solver::sumCalculated(const std::shared_ptr<squareOdds> & o) {
+float Solver::sumCalculated(const std::shared_ptr<SquareOdds> & o) {
     float ret = 0.0;
     int i, j, x = o->s->getX(), y = o->s->getY();
     for (i = x - 1; i <= x+1; i++) {
@@ -85,9 +85,9 @@ float Solver::sumCalculated(const std::shared_ptr<squareOdds> & o) {
 
 void Solver::updateOdds() {
     int i, j, x, y;
-    std::vector<std::shared_ptr<squareOdds>> foundSquares;
+    std::vector<std::shared_ptr<SquareOdds>> foundSquares;
     float remainingProb = getNumBomb(), currProb = 0.0;
-    std::vector<std::shared_ptr<squareOdds>>::iterator it;
+    std::vector<std::shared_ptr<SquareOdds>>::iterator it;
 
     // Reset all values
     for (auto & row : odds) {
@@ -195,14 +195,15 @@ void Solver::updateOdds() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public Functions
-Solver::Solver(int r, int c, int b) : Board(r, c, b, false) {
-    int i, j;
-    // Board::Board(r, c, b, false);
+Solver::Solver(int r, int c, int b) : Board(r, c, b, false), odds() {
+    int i = 0, j = 0;
     odds.resize(getNumRow());
     for (auto & row : odds) {
         row.resize(getNumCol());
-        for (auto & sq : row)
-            sq->s = board[i][j];
+        for (auto & sq : row) {
+            sq = std::make_shared<SquareOdds>();
+            sq->s = board[i][j++];
+        }
         i++; j = 0;
     }
 }
@@ -213,7 +214,7 @@ void Solver::reset() {
 }
 
 std::string Solver::makeGuess() {
-    std::vector<std::shared_ptr<squareOdds>> tOdds;
+    std::vector<std::shared_ptr<SquareOdds>> tOdds;
     int gMin = 0, gMax = 0, gIdx = 0;
     std::string retStr;
     std::cerr << "solver - odds = " << std::endl << *this;
