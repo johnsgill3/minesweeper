@@ -35,13 +35,8 @@ bool oddsCompare(const std::shared_ptr<SquareOdds> & a, const std::shared_ptr<Sq
     return false;
 }
 
-int probCompare(const std::shared_ptr<SquareOdds> & a, const std::shared_ptr<SquareOdds> & b) {
-    float diff = a->prob - b->prob;
-    if (diff < 0.0)
-        return -1;
-    else if (diff > 0.0)
-        return 1;
-    return 0;
+bool probCompare(const std::shared_ptr<SquareOdds> & a, const std::shared_ptr<SquareOdds> & b) {
+    return a->prob < b->prob;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -107,7 +102,7 @@ void Solver::updateOdds() {
             if (sq->s->isVisible()) {
                 countBlanks(sq);
                 if (sq->numBlank > 0)
-                    foundSquares.push_back(sq);
+                    foundSquares.emplace_back(sq);
                 sq->calculated = true;
                 sq->prob = -1.0;
             }
@@ -176,7 +171,7 @@ void Solver::updateOdds() {
         for (auto & row : odds) {
             for (auto & sq : row) {
                 if (!sq->s->isVisible() && !sq->calculated) {
-                    foundSquares.push_back(sq);
+                    foundSquares.(sq);
                 }
             }
         }
@@ -214,6 +209,8 @@ std::string Solver::makeGuess() {
     std::vector<std::shared_ptr<SquareOdds>> tOdds;
     int gMin = 0, gMax = 0, gIdx = 0;
     std::string retStr;
+    std::random_device rd;  // obtain a random number from hardware
+    std::mt19937 eng(rd());  // seed the generator
     std::cerr << "solver - odds = " << std::endl << *this;
     for (const auto & row : odds)
         for (const auto & sq : row)
@@ -268,8 +265,6 @@ std::string Solver::makeGuess() {
 
         } else {
             // Multiple of same prob. Randomly choose one
-            std::random_device rd;  // obtain a random number from hardware
-            std::mt19937 eng(rd());  // seed the generator
             std::uniform_int_distribution<> distr(gMin, gMax-1);  // define the range
 
             gIdx = distr(eng);
