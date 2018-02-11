@@ -243,7 +243,11 @@ Solver::Solver(int r, int c, int b)
     Square *s;
     for(i = 0; i < board->getNumRow(); i++)
         for(j = 0; j < board->getNumCol(); j++)
+        {
             odds[(i*board->getNumRow())+j].s = board->board[(i*board->getNumRow())+j];
+            if(args["debug"])
+                cerr << "solver - odds[" << to_string((i*board->getNumRow())+j) << "]" << endl;
+        }
 }
 
 Solver::~Solver()
@@ -266,12 +270,25 @@ string Solver::makeGuess()
     tOdds = new squareOdds[numOdds];
     string retStr;
     cerr << "solver - odds = " << endl << *this;
-
+    if(args["debug"])
+    {
+        cerr << "solver - odds (pre-sort):";
+        for(int i = 0; i < numOdds; i++)
+            cerr << " " << odds[i].prob;
+        cerr << endl;
+    }
     memcpy(tOdds, odds, sizeof(squareOdds)*(numOdds));
+    if(args["debug"])
+    {
+        cerr << "solver - tOdds (pre-sort):";
+        for(int i = 0; i < numOdds; i++)
+            cerr << " " << tOdds[i].prob;
+        cerr << endl;
+    }
     qsort(tOdds, numOdds, sizeof(squareOdds), probCompare);
     if(args["debug"])
     {
-        cerr << "solver - tOdds:";
+        cerr << "solver - tOdds (post-sort):";
         for(int i = 0; i < numOdds; i++)
             cerr << " " << tOdds[i].prob;
         cerr << endl;
