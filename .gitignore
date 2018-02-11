@@ -1,2 +1,4 @@
 .d
 build
+*.log
+fifo
